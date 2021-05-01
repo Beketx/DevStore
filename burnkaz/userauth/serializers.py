@@ -1,5 +1,7 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
+
+from client.models import Client, DevClientInContact
 from .models import User, PhoneOTP, City
 
 
@@ -137,12 +139,46 @@ class CityTitleSerializer(serializers.BaseSerializer):
     def to_representation(self, instance):
         return instance.title
 
+class PrivateField(serializers.ReadOnlyField):
+
+    def get_attribute(self, instance):
+        # print(instance)
+        try:
+            client = Client.objects.get(user=self.context['request'].user)
+            contacts = DevClientInContact.objects.filter(client_id=client, dev_id__user=instance)
+            try:
+                for contact in contacts:
+                    if contact.dev_perm == True:
+                        return super(PrivateField, self).get_attribute(instance)
+            except:
+                return None
+        except:
+            return None
+
 class UserSerializer(serializers.ModelSerializer):
     city = CityTitleSerializer(read_only=True, many=False)
-
+    phone = PrivateField()
+    # phone = serializers.SerializerMethodField("get_phone")
     class Meta:
         model = User
-        fields = ["name", "surname", "birth_date", "city"]
+        fields = ["name", "surname", "birth_date", "gender", "role", "city", "phone"]
+
+    def get_phone(self, instance):
+        try:
+            try:
+                client = Client.objects.get(user=self.context['request'].user)
+            except Exception as e:
+                return str(e)
+            contacts = DevClientInContact.objects.filter(client_id=client, dev_id__user=instance)
+            try:
+                for contact in contacts:
+                    if contact.dev_perm == True:
+                        return instance.phone
+            except Exception as e:
+                raise str(e)
+        except Exception as e:
+            raise type(e)
+
 
 class CitiesSerializer(serializers.ModelSerializer):
     class Meta:

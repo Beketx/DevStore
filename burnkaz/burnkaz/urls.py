@@ -18,8 +18,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from developer.views import DeveloperProfiles
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', DeveloperProfiles.as_view({'get': 'list'})),
     path('auth/', include('userauth.urls')),
     path('api/', include('developer.urls')),
     path('api/', include('devutils.urls')),

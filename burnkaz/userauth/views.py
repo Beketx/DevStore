@@ -382,14 +382,16 @@ class RegistrationStepFive(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-class GetProfile(ListModelMixin, viewsets.GenericViewSet):
+class GetProfile(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, ]
     serializer_class = serializers.FullInfoDeveloperSerializer
-    queryset = Developer.objects.all()
 
-    def get_queryset(self):
-        devs = Developer.objects.filter(user__email=self.request.user.email)
-        return devs
+
+    def list(self, request):
+        devs = Developer.objects.get(user=self.request.user)
+        serializer_class = serializers.FullInfoDeveloperSerializer(devs, many=False)
+        print(devs.work_experience)
+        return Response(serializer_class.data)
 
 class LoginAPIView(APIView):
     """

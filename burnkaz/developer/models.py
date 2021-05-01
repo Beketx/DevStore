@@ -12,17 +12,24 @@ class Skills(models.Model):
     def __str__(self):
         return self.title
 
+
+
 class Developer(models.Model):
     user = models.OneToOneField('userauth.User', on_delete=models.CASCADE)
     education = models.CharField(max_length=140, null=True)
     about = models.CharField(max_length=255, null=True)
     work_experience = models.CharField(max_length=255, null=True)
     dev_service = models.OneToOneField(to="DeveloperService", on_delete=models.CASCADE, null=True)
-    stacks_id = models.ManyToManyField(Stacks, related_name="developer_list_stacks")
+    stacks_id = models.ForeignKey(Stacks, on_delete=models.CASCADE, related_name="developer_list_stacks", null=True)
     skills_id = models.ManyToManyField(Skills, related_name="developer_list_skills")
     
     def __str__(self):
         return self.user.email
+
+class Favorites(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    developer = models.ForeignKey(Developer, on_delete=models.CASCADE, null=True, blank=True)
+    favorite_bool = models.BooleanField(default=False, null=True, blank=True)
 
 class Rating(models.Model):
     communication = models.FloatField(null=True)
@@ -37,7 +44,7 @@ class Rating(models.Model):
 
 class Review(models.Model):
     text = models.TextField(null=True)
-    developer = models.ForeignKey(to="Developer", on_delete=models.CASCADE, null=True)
+    developer = models.ForeignKey(to="Developer", on_delete=models.CASCADE, null=True, related_name='developer')
     user_id = models.ForeignKey("userauth.User", on_delete=models.CASCADE, null=True)
 
 class ImageTab(models.Model):
