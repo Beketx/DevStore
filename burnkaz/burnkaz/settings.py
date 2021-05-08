@@ -199,7 +199,7 @@ MEDIA_URL = '/media/'
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'formatters': {
         'console': {
             'format': '%(name)-12s %(levelname)-8s %(message)s'
@@ -213,25 +213,25 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'console'
         },
-        'file': {
+        'file_debug': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'formatter': 'file',
             'filename': './logs/debug.log'
         },
-        'file': {
+        'file_info': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'formatter': 'file',
             'filename': './logs/info.log'
         },
-        'file': {
+        'file_warning': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
             'formatter': 'file',
             'filename': './logs/warning.log'
         },
-        'file': {
+        'file_error': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
             'formatter': 'file',
@@ -239,9 +239,30 @@ LOGGING = {
         }
     },
     'loggers': {
-        '': {
+        'developer': {
             'level': 'DEBUG',
-            'handlers': ['console', 'file']
+            'handlers': ['file_debug', 'file_info',
+                         'file_warning', 'file_error']
+        },
+        'userauth': {
+            'level': 'DEBUG',
+            'handlers': ['file_debug', 'file_info',
+                         'file_warning', 'file_error']
+        },
+        'utils': {
+            'level': 'DEBUG',
+            'handlers': ['file_debug', 'file_info',
+                         'file_warning', 'file_error']
+        },
+        'client': {
+            'level': 'DEBUG',
+            'handlers': ['file_debug', 'file_info',
+                         'file_warning', 'file_error']
+        },
+        'devutils': {
+            'level': 'DEBUG',
+            'handlers': ['file_debug', 'file_info',
+                         'file_warning', 'file_error']
         }
     }
 }

@@ -163,6 +163,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["name", "surname", "birth_date", "gender", "role", "city", "phone"]
 
+    def validate_phone(self, phone):
+        if ['/', '.'] in phone:
+            raise serializers.ValidationError('Not accepting character in phone')
+
     def get_phone(self, instance):
         try:
             try:

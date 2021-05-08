@@ -15,7 +15,11 @@ class ClientContactDev(APIView):
     permission_classes = [IsAuthenticated, ]
 
     def get(self, request):
-        return Response("123")
+        res = {
+            'status': True,
+            'detail': 'Message to developer send'
+        }
+        return Response(res, status=status.HTTP_200_OK)
 
     def post(self, request):
         try:
@@ -23,7 +27,8 @@ class ClientContactDev(APIView):
             user = request.user
             client = Client.objects.get(user=user)
             dev_id = data["developer_id"]
-            dev = Developer.objects.get(id=dev_id)
+            if Developer.objects.get(id=dev_id):
+                dev = Developer.objects.get(id=dev_id)
             if not DevClientInContact.objects.filter(client_id=client).exists():
                 contact = DevClientInContact.objects.create(client_id=client)
             contact = DevClientInContact.objects.get(client_id=client)

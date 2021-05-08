@@ -1,12 +1,16 @@
 import hashlib
 import os
-
 import requests
+from rest_framework import viewsets
+from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 from django.core.files.storage import FileSystemStorage
 import datetime as dt
 from datetime import datetime
 from rest_framework.response import Response
+
+from developer.models import DeveloperImages
+from utils.serializers import DevAvatarsSerializer
 
 
 class ML(APIView):
@@ -33,4 +37,8 @@ class ML(APIView):
         else:
             return {"Status": 404}
 
+class MLViewSet(viewsets.ModelViewSet):
+    queryset = DeveloperImages.objects.all()
+    serializer_class = DevAvatarsSerializer
+    parser_classes = (MultiPartParser, )
 

@@ -4,7 +4,7 @@ from userauth.serializers import UserSerializer
 from .models import Skills, Stacks, Developer, DeveloperService, \
     Rating, \
     Review, \
-    ImageTab, Favorites
+    ImageTab, Favorites, Feedback
 from userauth.models import User, City
 from devutils.serializers import StacksSerializer,\
                                  StackTitleSerializer,\
@@ -36,17 +36,29 @@ class ReviewSerializer(serializers.ModelSerializer):
         return (rating.communication+rating.quality+rating.truth_review)/3
 
 class RatingSerializer(serializers.ModelSerializer):
-    average_rating = serializers.SerializerMethodField("get_rating_avg")
-    count_rating = serializers.SerializerMethodField('get_count_avg')
-    communication = serializers.SerializerMethodField('get_communication')
-    quality = serializers.SerializerMethodField('get_quality')
-    truth_review = serializers.SerializerMethodField('get_truth')
+    # average_rating = serializers.IntegerField(source='get_count_avg')
+    # count_rating = serializers.IntegerField(source='get_count_avg')
+    # communication = serializers.IntegerField(source='get_communication')
+    # quality = serializers.IntegerField(source='get_quality')
+    # truth_review = serializers.IntegerField(source='get_truth')
+    rating_average = serializers.SerializerMethodField("get_rating_average")
+    rating_count = serializers.SerializerMethodField("get_rating_count")
+    rating_communication = serializers.SerializerMethodField('get_rating_communication')
+    rating_quality = serializers.SerializerMethodField('get_rating_quality')
+    rating_truth_review = serializers.SerializerMethodField('get_rating_truth_review')
+    print(1)
 
     class Meta:
         model = Rating
-        fields = ["average_rating", 'count_rating', 'communication', 'quality', 'truth_review']
+        fields = ["rating_average", 'rating_count',
+                  'rating_communication', 'rating_quality',
+                  'rating_truth_review']
 
-    def get_count_avg(self, obj):
+    def quality_validate(self, quality):
+        if ['/','%'] in quality:
+            raise serializers.ValidationError('invalid character')
+
+    def get_rating_average(self, obj):
         try:
             rating = Rating.objects.filter(developer=obj)
             sum_rate = 0
@@ -61,7 +73,7 @@ class RatingSerializer(serializers.ModelSerializer):
         except:
             return 0
 
-    def get_rating_avg(self, obj):
+    def get_rating_count(self, obj):
         try:
             rating = Rating.objects.filter(developer=obj)
             sum_rate = 0
@@ -78,7 +90,7 @@ class RatingSerializer(serializers.ModelSerializer):
         except:
             return 0
 
-    def get_communication(self, obj):
+    def get_rating_truth_review(self, obj):
         try:
             rating = Rating.objects.filter(developer=obj)
             sum_rate = 0
@@ -94,7 +106,7 @@ class RatingSerializer(serializers.ModelSerializer):
         except:
             return 0
 
-    def get_quality(self, obj):
+    def get_rating_quality(self, obj):
         try:
             rating = Rating.objects.filter(developer=obj)
             sum_rate = 0
@@ -110,7 +122,7 @@ class RatingSerializer(serializers.ModelSerializer):
         except:
             return 0
 
-    def get_truth(self, obj):
+    def get_truth_review(self, obj):
         try:
             rating = Rating.objects.filter(developer=obj)
             sum_rate = 0
@@ -126,6 +138,8 @@ class RatingSerializer(serializers.ModelSerializer):
         except:
             return 0
 
+
+
 class DevelopersSerializer(serializers.ModelSerializer):
     user = UserSerializer(many=False, read_only=True)
     stacks_id = StacksSerializer(many=False, read_only=True)
@@ -133,11 +147,23 @@ class DevelopersSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField("get_rating_avg")
     rating_count = serializers.SerializerMethodField("get_rating_count")
     price = serializers.SerializerMethodField('get_price')
-
+    is_favorite = serializers.SerializerMethodField('get_favorite')
     class Meta:
         model = Developer
         fields = ['id', "user", "stacks_id", "skills_id",
-                  "rating", "rating_count", "price"]
+                  "rating", "rating_count", "price",
+                  "is_favorite"]
+
+    def get_favorite(self, obj):
+        try:
+            # user = self.context['request'].user
+            request = self.context.get("request")
+            if request and hasattr(request, "user"):
+                user = request.user
+            fav = Favorites.objects.get(developer=obj, user=user)
+            return True
+        except:
+            return False
 
     def get_rating_count(self, obj):
         rating = Rating.objects.filter(developer=obj)
@@ -164,7 +190,7 @@ class DevelopersSerializer(serializers.ModelSerializer):
         else:
             avg_rating = None
         return avg_rating
-
+    @staticmethod
     def get_price(self, obj):
         try:
             service = DeveloperService.objects.get(developer=obj)
@@ -177,12 +203,7 @@ class StackDeveloperSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stacks
         fields = ['id', 'title', 'developer_list_stacks']
-    #
-    # def get_stack_dev(self, obj):
-    #     stacks = Stacks.objects.all()
-    #     for stack in stacks:
-    #         developer = Developer.objects.filter(stacks_id=stack)
-    #         return DevelopersSerializer(instance=developer)
+
 
 class DeveloperServiceSerializer(serializers.ModelSerializer):
 
@@ -200,15 +221,21 @@ class FullInfoDeveloperSerializer(serializers.ModelSerializer):
     # rating = serializers.SerializerMethodField("get_rating_avg")
     # rating_count = serializers.SerializerMethodField("get_rating_count")
     # price = serializers.SerializerMethodField('get_price')
-    rating = RatingSerializer(many=False, read_only=True)
-    review_count = ReviewSerializer(many=True, read_only=True)
+    rating = RatingSerializer(many=True, read_only=True)
+    review = ReviewSerializer(many=True, read_only=True)
     dev_service = DeveloperServiceSerializer(many=False, read_only=True)
-
+    is_favoritex = serializers.BooleanField(read_only=True)
     class Meta:
         model = Developer
         fields = ['id', "user", "education", "dev_service",
-                  "stacks_id", "skills_id", "rating",
-                  "work_experience", "review_count", "about", ]
+                  "stacks_id", "skills_id", "rating", "review",
+                  "work_experience", "about",
+                  "is_favoritex"]
+
+    def restore_object(self, attrs, instance=None):
+        # is_favorite = attrs.pop('is_favoritex')
+        instance = super(FullInfoDeveloperSerializer, self).restore_object(attrs, instance=instance)
+        return instance
 
 
     def get_rating_count(self, obj):
@@ -263,43 +290,67 @@ class FavoritesSerializer(serializers.ModelSerializer):
         model = Favorites
         fields = ['developer', ]
 
+"""
+REVIEW
+"""
+
 class ReviewSerializer(serializers.ModelSerializer):
-    user_id = UserSerializer(many=False, read_only=True)
+    # user_id = UserSerializer(many=False, read_only=True)
 
     class Meta:
         model = Review
-        fields = ['text', 'developer', 'user_id']
+        fields = ['text', 'developer']
+
+
 
 class RatingSerializer(serializers.ModelSerializer):
-
+    # user_id = UserSerializer(many=False, read_only=True)
     class Meta:
         model = Rating
         fields = ['communication', 'quality', 'truth_review',
-                    'developer', 'user_id']
+                    'developer']
+
+class RatingDevSerializer(serializers.ModelSerializer):
+    # user_id = UserSerializer(many=False, read_only=True)
+    class Meta:
+        model = Rating
+        fields = ['communication', 'quality', 'truth_review']
+
+    def create(self, validated_data):
+        developer = validated_data.get('developer_id')
+        ratings = Rating.objects.create(**validated_data)
+        dev = Developer.objects.get(id=developer)
+        dev.rating_id = ratings.id
+        # for building_data in buildings_data:
+        #     Building.objects.create(building_group=building_group, **building_data)
+        return ratings
 
 
+class ReviewRatingSerializer(serializers.ModelSerializer):
+    user_id = UserSerializer(many=False, read_only=True)
+    rating_id = RatingSerializer
+    review_id = ReviewSerializer
+
+    class Meta:
+        model = Review
+        fields = ['user_id', 'rating']
 
 
+class FeedbackSerializer(serializers.ModelSerializer):
+    rating_id = RatingSerializer()
+    review_id = ReviewSerializer()
+    user_id = UserSerializer(many=False, read_only=True)
 
+    class Meta:
+        model = Feedback
+        fields = ['developer_id', 'rating_id', 'review_id', 'user_id']
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # def create(self, validated_data):
+    #     review = validated_data.pop('review_id')
+    #     order = Review.objects.create(**review)
+    #     review = validated_data.pop('rating_id')
+    #     print(review)
+    #     order = Rating.objects.create(**review)
+    #     # instance = Equipment.objects.create(**validated_data)
+    #     # Assignment.objects.create(Order=order, Equipment=instance)
+    #     return order

@@ -1,0 +1,10 @@
+Devutils app
+It does showing Stack, Skill, City
+
+Views it does ALSO myfavorites-list, add my favorites
+
+URLS(path)
+
+Models empty
+
+Serialziers Stack, City, Skill

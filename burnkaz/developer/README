@@ -1,0 +1,13 @@
+Developer startapp
+Everything about developer developer
+
+URLS(register) -- contacts, developer profile,
+        my-profile,
+        review
+
+VIEWS -- DEV PROFILE, DEV CONTACTS, DEV FAVORITES, REVIEW, FEEDBACK
+
+
+MODELS -- DEVELOPER, FAVORITES, STACK, SKILL, FEEDBACK , REVIEW
+
+

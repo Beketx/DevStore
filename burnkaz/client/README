@@ -1,0 +1,13 @@
+Client app
+It does contacting only
+
+Realizes three api -- incontact[Only this],
+                    favorites,
+                    feedback
+
+URLS(path)
+
+Two models one -- Client,
+                    DevClientInContact
+
+Serializers empty

@@ -1,17 +1,10 @@
-import json
+import os
 
 from django.core.paginator import InvalidPage
-from django.http import JsonResponse
-from rest_framework import status
 from rest_framework import pagination
-from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, NotFound
-from collections import OrderedDict
+from datetime import datetime
 
-# class DeveloperPagination(pagination.LimitOffsetPagination):
-#     page_size = 5
-#     # page_size_query_param = "page_size"
-#     max_page_size = 10
 
 class DeveloperPagination(pagination.PageNumberPagination):
     page_size = 5
@@ -38,9 +31,6 @@ class DeveloperPagination(pagination.PageNumberPagination):
                 "count": 0,
                 "results": []
             }
-            # msg = self.invalid_page_message.format(
-            #     page_number=page_number, message=str(exc)
-            # )
             raise NotFound(msg)
 
         if paginator.num_pages > 1 and self.template is not None:
@@ -50,21 +40,23 @@ class DeveloperPagination(pagination.PageNumberPagination):
         self.request = request
         return list(self.page)
 
-    # def paginate_queryset(self, queryset, request, view=None):
-    #     """Checking NotFound exception"""
-    #     try:
-    #         return super(EmptyPagination, self).paginate_queryset(queryset, request, view=view)
-    #     except NotFound:  # intercept NotFound exception
-    #         return list()
-    #
-    # def get_paginated_response(self, data):
-    #     """Avoid case when self does not have page properties for empty list"""
-    #     if hasattr(self, 'page') and self.page is not None:
-    #         return super(EmptyPagination, self).get_paginated_response(data)
-    #     else:
-    #         return Response(OrderedDict([
-    #             ('count', None),
-    #             ('next', None),
-    #             ('previous', None),
-    #             ('results', data)
-    #         ]))
+
+
+MAX_FILE_SIZE = 1024000
+ALLOWED_EXTENSIONS = ['.jpg', '.png']
+
+def developer_photos_size(value):
+    if value.size > MAX_FILE_SIZE:
+        raise ValidationError(f'max file size is: {MAX_FILE_SIZE}')
+
+def developer_file_extension(value):
+    split_ext = os.path.splitext(value.name)
+    if len(split_ext) > 1:
+        ext = split_ext[1]
+        if not ext.lower() in ALLOWED_EXTENSIONS:
+            raise ValidationError(f'not allowed file value extension, valid extensions: {ALLOWED_EXTENSIONS}')
+
+def developer_photos_path(instance, filename):
+    user = instance.user
+    date = datetime.today().strftime('%Y-%m-%d')
+    return f'dev_profile_avatars/users/{user.id}/{str(date)}/{filename}'

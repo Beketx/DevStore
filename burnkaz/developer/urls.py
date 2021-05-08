@@ -12,11 +12,10 @@ router.register('developer-profiles', views.DeveloperProfiles, basename='devprof
 router.register('my-profile', GetProfile, basename='myprof')
 
 router.register('developer-contact', DeveloperContacts, basename='devcontact')
-router.register('review', views.Review, basename='review')
+router.register('review', views.ReviewView, basename='review')
+router.register('rating', views.RatingView, basename='rating')
+# router.register('feedback', views.FeedbackAPIView, basename='review-rating')
 urlpatterns = router.urls
-# urlpatterns = [
-#     path('developer-profiles/', views.DeveloperProfiles.as_view()),
-#     # path('developer-profiles/<int:pk>/', views.DeveloperProfiles.as_view())
-# ]
+
 
 

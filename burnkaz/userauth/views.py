@@ -388,10 +388,16 @@ class GetProfile(viewsets.ViewSet):
 
 
     def list(self, request):
-        devs = Developer.objects.get(user=self.request.user)
-        serializer_class = serializers.FullInfoDeveloperSerializer(devs, many=False)
-        print(devs.work_experience)
-        return Response(serializer_class.data)
+        try:
+            devs = Developer.objects.get(user=self.request.user)
+            serializer_class = serializers.FullInfoDeveloperSerializer(devs, many=False)
+            return Response(serializer_class.data)
+        except:
+            serializer_class = serializers.UserSerializer(self.request.user, many=False)
+            return Response({
+                "id": self.request.user.id,
+                "user": serializer_class.data
+            })
 
 class LoginAPIView(APIView):
     """
@@ -482,23 +488,6 @@ def send_otp(email):
     else:
         return False
 
-# class ValidateOTP(APIView):
-#     """
-#     Logs in an existing user.
-#     """
-#     permission_classes = [AllowAny]
-#     serializer_class = LoginSerializer
-#
-#     def post(self, request):
-#         """
-#         Checks is user exists.
-#         Email and password are required.
-#         Returns a JSON web token.
-#         """
-#         serializer = self.serializer_class(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#
-#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ValidateOTP(APIView):
     # permission_classes = (permissions.AllowAny,)
